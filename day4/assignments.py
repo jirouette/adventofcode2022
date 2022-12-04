@@ -15,16 +15,26 @@ def does_an_assignment_contain_another(pair: AssignmentPair) -> bool:
     intersection = pair[0] & pair[1]
     return pair[0] == intersection or pair[1] == intersection
 
+def does_an_assignment_overlap_another(pair: AssignmentPair) -> bool:
+    """Check whether an assignement overlap another within a pair."""
+    return bool(pair[0] & pair[1])
+
 def part1_how_many_assignments_contain_another(lines: list[str]) -> int:
     """Compute how many assignements contain another within a pair per input file."""
     return sum(map(lambda line: does_an_assignment_contain_another(parse_pair(line)), lines))
+
+def part2_how_many_assignments_overlap_another(lines: list[str]) -> int:
+    """Compute how many assignements contain another within a pair per input file."""
+    return sum(map(lambda line: does_an_assignment_overlap_another(parse_pair(line)), lines))
 
 if __name__ == '__main__':
     with open('puzzle_input_example.txt') as f:
         lines = f.read().strip().split("\n")
         print("Puzzle input example")
         print("Part 1:", part1_how_many_assignments_contain_another(lines))
+        print("Part 2:", part2_how_many_assignments_overlap_another(lines))
     with open('puzzle_input.txt') as f:
         lines = f.read().strip().split("\n")
         print("Puzzle input")
         print("Part 1:", part1_how_many_assignments_contain_another(lines))
+        print("Part 2:", part2_how_many_assignments_overlap_another(lines))
