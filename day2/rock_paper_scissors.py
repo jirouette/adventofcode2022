@@ -117,15 +117,18 @@ def part2_parse_game(line: str) -> int:
     opponent_play, strategy = line.strip().split() # Supposing format is "A Z"
     opponent_play = OpponentPlay(opponent_play)
     strategy = Strategy(strategy)
+    score = 0
     match strategy:
         case Strategy.WIN:
             player_play = strategy_win(opponent_play)
+            score = Outcome.WIN.value
         case Strategy.DRAW:
             player_play = strategy_draw(opponent_play)
+            score = Outcome.DRAW.value
         case Strategy.LOSS:
             player_play = strategy_loss(opponent_play)
-    outcome = compute_outcome(player_play, opponent_play)
-    return compute_score(player_play, outcome)
+            score = Outcome.LOSS.value
+    return score + play_score(player_play)
 
 if __name__ == '__main__':
     with open('puzzle_input_example.txt') as f:
