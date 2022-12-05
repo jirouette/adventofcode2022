@@ -41,12 +41,19 @@ def parse_orders(data: str) -> list[Order]:
         orders.append(Order(origin_stack=line[1], target_stack=line[2], number_of_moves=line[0]))
     return orders
 
-def apply_orders(stacks: list[Crate], orders: list[Order]) -> list[Crate]:
-    """Apply a list of orders to a list of crates."""
+def part1_apply_orders(stacks: list[Crate], orders: list[Order]) -> list[Crate]:
+    """Apply a list of orders using part1 alogirhtm to a list of crates."""
     for order in orders:
         for _ in range(order.number_of_moves):
             supply = stacks[order.origin_stack - 1].pop(0)
             stacks[order.target_stack - 1].insert(0, supply)
+    return stacks
+
+def part2_apply_orders(stacks: list[Crate], orders: list[Order]) -> list[Crate]:
+    """Apply a list of orders using part2 algorithm to a list of crates."""
+    for order in orders:
+        supplies_to_move = [stacks[order.origin_stack - 1].pop(0) for _ in range(order.number_of_moves)]
+        stacks[order.target_stack - 1] = supplies_to_move + stacks[order.target_stack - 1]
     return stacks
 
 def get_final_top_word(stacks: list[Crate]) -> str:
@@ -57,15 +64,24 @@ def part1(data: str) -> str:
     stacks_data, orders_data = data.split("\n\n")
     stacks: list[Crate] = parse_initial_stacks(stacks_data)
     orders: list[Order] = parse_orders(orders_data)
-    orders = apply_orders(stacks, orders)
+    orders = part1_apply_orders(stacks, orders)
+    return get_final_top_word(stacks)
+
+def part2(data: str) -> str:
+    stacks_data, orders_data = data.split("\n\n")
+    stacks: list[Crate] = parse_initial_stacks(stacks_data)
+    orders: list[Order] = parse_orders(orders_data)
+    orders = part2_apply_orders(stacks, orders)
     return get_final_top_word(stacks)
 
 if __name__ == '__main__':
-    with open("day5/puzzle_input_example.txt") as f:
+    with open("puzzle_input_example.txt") as f:
         data = f.read()
         print("Puzzle input example")
         print("Part 1:", part1(data))
-    with open("day5/puzzle_input.txt") as f:
+        print("Part 2:", part2(data))
+    with open("puzzle_input.txt") as f:
         data = f.read()
         print("Puzzle input")
         print("Part 1:", part1(data))
+        print("Part 2:", part2(data))
