@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 #coding: utf8
 
+import math
+
+
 Grid = list[list[int]] # Grid[y][x]
 
 def parse_grid(data: str) -> Grid:
@@ -30,6 +33,28 @@ def is_a_tree_visible(grid: Grid, x: int, y: int) -> bool:
 
     return False # is not visible
 
+def get_tree_scenic_score(grid: Grid, x: int, y: int) -> int:
+    scores: list[int] = list()
+    height = len(grid)
+    width = len(grid[0])
+    tree = grid[y][x]
+    for row_grid_range in [range(x-1, -1, -1), range(x+1, width)]:
+        current_score = 0
+        for i in row_grid_range:
+            current_score += 1
+            if grid[y][i] >= tree:
+                break
+        scores.append(current_score)
+    
+    for column_grid_range in [range(y-1, -1, -1), range(y+1, height)]:
+        current_score = 0
+        for j in column_grid_range:
+            current_score += 1
+            if grid[j][x] >= tree:
+                break
+        scores.append(current_score)
+    return math.prod(scores)
+
 
 def visible_trees(grid: Grid) -> int:
     height = len(grid)
@@ -39,14 +64,19 @@ def visible_trees(grid: Grid) -> int:
         for y in range(height):
             if is_a_tree_visible(grid, x, y):
                 trees += 1
-    return trees            
+    return trees
+
+def get_max_scenic_score(grid: Grid) -> int:
+    return max([get_tree_scenic_score(grid, x, y) for y in range(len(grid)) for x in range(len(grid[0]))])
 
 if __name__ == '__main__':
     with open('day8/puzzle_input_example.txt') as f:
         grid = parse_grid(f.read().strip())
         print("Puzzle input example")
         print("Part 1:", visible_trees(grid))
+        print("Part 2:", get_max_scenic_score(grid))
     with open('day8/puzzle_input.txt') as f:
         grid = parse_grid(f.read().strip())
         print("Puzzle input")
         print("Part 1:", visible_trees(grid))
+        print("Part 2:", get_max_scenic_score(grid))
