@@ -1,73 +1,82 @@
 #!/usr/bin/python3
 #coding: utf8
 
-import math
+from dataclasses import dataclass
+from enum import Enum
 
+@dataclass
+class Grid:
+    rows: list[list[int]]
 
-Grid = list[list[int]] # Grid[y][x]
+    @property
+    def width(self):
+        try:
+            return len(self.rows[0])
+        except IndexError:
+            return 0
+    
+    @property
+    def height(self):
+        return len(self.rows)
+    
+    def __getitem__(self, key: int) -> list[int]:
+        return self.rows[key]
+
+class Direction(Enum):
+    ROW = 1
+    COLUMN = 2
 
 def parse_grid(data: str) -> Grid:
     """Parse data into a 2D list grid[y][x]."""
-    return [[int(tree) for tree in row] for row in data.split("\n")]
+    return Grid([[int(tree) for tree in row] for row in data.split("\n")])
 
 def is_a_tree_visible(grid: Grid, x: int, y: int) -> bool:
-    height = len(grid)
-    width = len(grid[0])
     tree = grid[y][x]
-    if x in [0, width-1] or y in [0, height-1]:
-        return True
-    
-    for row_grid_range in [range(x), range(x+1, width)]:
-        for i in row_grid_range:
-            if grid[y][i] >= tree:
+
+    ranges = [
+        (Direction.ROW, range(x)),
+        (Direction.ROW, range(x+1, grid.width)),
+        (Direction.COLUMN, range(y)),
+        (Direction.COLUMN, range(y+1, grid.height))
+    ]
+    for direction, grid_range in ranges:
+        for pos in grid_range:
+            if direction == Direction.ROW and grid[y][pos] >= tree:
+                break
+            if direction == Direction.COLUMN and grid[pos][x] >= tree:
                 break
         else:
-            return True # is visible from the left or the right
-
-    for column_grid_range in [range(y), range(y+1, height)]:
-        for j in column_grid_range:
-            if grid[j][x] >= tree:
-                break
-        else:
-            return True # is visible from the top or the bottom
-
-    return False # is not visible
+            return True
+    return False
 
 def get_tree_scenic_score(grid: Grid, x: int, y: int) -> int:
-    scores: list[int] = list()
-    height = len(grid)
-    width = len(grid[0])
+    final_score = 1
     tree = grid[y][x]
-    for row_grid_range in [range(x-1, -1, -1), range(x+1, width)]:
-        current_score = 0
-        for i in row_grid_range:
-            current_score += 1
-            if grid[y][i] >= tree:
-                break
-        scores.append(current_score)
-    
-    for column_grid_range in [range(y-1, -1, -1), range(y+1, height)]:
-        current_score = 0
-        for j in column_grid_range:
-            current_score += 1
-            if grid[j][x] >= tree:
-                break
-        scores.append(current_score)
-    return math.prod(scores)
 
+    ranges = [
+        (Direction.ROW, range(x-1, -1, -1)),
+        (Direction.ROW, range(x+1, grid.width)),
+        (Direction.COLUMN, range(y-1, -1, -1)),
+        (Direction.COLUMN, range(y+1, grid.height))
+    ]
+    for direction, grid_range in ranges:
+        current_score = 0
+        for pos in grid_range:
+            current_score += 1
+            if direction == Direction.ROW and grid[y][pos] >= tree:
+                break
+            if direction == Direction.COLUMN and grid[pos][x] >= tree:
+                break
+        final_score *= current_score
+        if final_score == 0:
+            return 0 # no need to continue this
+    return final_score
 
 def visible_trees(grid: Grid) -> int:
-    height = len(grid)
-    width = len(grid[0])
-    trees = 0
-    for x in range(width):
-        for y in range(height):
-            if is_a_tree_visible(grid, x, y):
-                trees += 1
-    return trees
+    return sum([is_a_tree_visible(grid, x, y) for y in range(grid.height) for x in range(grid.width)])
 
 def get_max_scenic_score(grid: Grid) -> int:
-    return max([get_tree_scenic_score(grid, x, y) for y in range(len(grid)) for x in range(len(grid[0]))])
+    return max([get_tree_scenic_score(grid, x, y) for y in range(grid.height) for x in range(grid.width)])
 
 if __name__ == '__main__':
     with open('day8/puzzle_input_example.txt') as f:
