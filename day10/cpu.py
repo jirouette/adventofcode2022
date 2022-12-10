@@ -17,22 +17,26 @@ Observer = Callable[[int, int], None]
 @dataclass
 class CPU:
     instructions: InstructionList
-    observer: Observer
+    observers: list[Observer]
     X: int = 1
     cycle: int = 0
 
     def execute(self):
         for instruction, args in self.instructions:
-            self.cycle += 1
-            self.observer(self.cycle, self.X)
+            self.new_cycle()
             match instruction:
                 case Instruction.ADDX:
                     self.addx(int(args[0]))
     
+    def new_cycle(self, nb_cycle = 1):
+        for _ in range(nb_cycle):
+            self.cycle += 1
+            for observer in self.observers:
+                observer(self.cycle, self.X)
+    
     def addx(self, amount: int):
         # take whole 2 cycle to execute, so increment the cycle and call the observer
-        self.cycle += 1
-        self.observer(self.cycle, self.X)
+        self.new_cycle()
         self.X += amount
 
 def parse_instructions_from_file(filename: str) -> InstructionList:
@@ -46,7 +50,7 @@ def parse_instructions_from_file(filename: str) -> InstructionList:
 class Part1Observer:
     signal_strength: int = 0
 
-    def observer(self, cycle: int, X: int):
+    def observe(self, cycle: int, X: int):
         if cycle not in [20, 60, 100, 140, 180, 220]:
             return
         self.signal_strength += cycle * X
@@ -54,16 +58,46 @@ class Part1Observer:
     def get_signal_strength(self) -> int:
         return self.signal_strength
 
-def part1(filename: str):
+SCREEN_ROW_WIDTH = 40
+class CRT:
+    pos = 0
+    screen = ""
+    current_sprite_position = 0
+
+    def observe(self, _: int, X: int):
+        self.current_sprite_position = X
+        self.draw()
+    
+    def has_to_draw(self) -> bool:
+        return self.pos >= self.current_sprite_position-1 and self.pos <= self.current_sprite_position+1
+    
+    def check_screen_position(self):
+        if self.pos < SCREEN_ROW_WIDTH:
+            return
+        self.pos = 0
+        self.screen += "\n"
+
+    def draw(self):
+        self.check_screen_position()
+        self.screen += "#" if self.has_to_draw() else "."
+        self.pos += 1
+    
+    def display(self):
+        print(self.screen)
+
+def puzzle(filename: str):
     instructions = parse_instructions_from_file(filename)
-    observer = Part1Observer()
-    cpu = CPU(instructions, observer.observer)
+    part1 = Part1Observer()
+    part2 = CRT()
+    cpu = CPU(instructions, observers=[part1.observe, part2.observe])
     cpu.execute()
-    print("Part 1", observer.get_signal_strength())
+    print("Part 1", part1.get_signal_strength())
+    print("Part 2")
+    part2.display()
 
 if __name__ == '__main__':
     print("Puzzle input example")
-    part1("day10/puzzle_input_example.txt")
-    print("Puzzle input")
-    part1("day10/puzzle_input.txt")
+    puzzle("day10/puzzle_input_example.txt")
 
+    print("Puzzle input")
+    puzzle("day10/puzzle_input.txt")
