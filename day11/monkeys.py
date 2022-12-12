@@ -31,7 +31,7 @@ class Monkey:
     def add_item(self, item: int):
         self.items.append(item)
     
-    def inspect(self) -> int:
+    def inspect(self, relief: bool = True, max_item: int = 0) -> int:
         if not self.items:
             raise MonkeyHasNoItemException()
         self.nb_times_inspection += 1
@@ -50,7 +50,11 @@ class Monkey:
             case operand, "*", "old":
                 item *= int(operand)
 
-        self.thrown_item = math.floor(item / 3)
+        self.thrown_item = item
+        if relief:
+            self.thrown_item = math.floor(item / 3)
+        if max_item:
+            self.thrown_item %= max_item
         return self.thrown_item
     
     def throw(self) -> int:
@@ -71,23 +75,29 @@ def parse_config(filename: str) -> list[Monkey]:
     data = yaml.load(document, Loader=yaml.SafeLoader)
     return [parse_monkey(data[f"Monkey {i}"]) for i in range(len(data))] # make sure it is correctly sorted
 
-def round(monkeys: list[Monkey]):
+def round(monkeys: list[Monkey], relief: bool = True):
+    lcm = math.lcm(*[monkey.test for monkey in monkeys])
     for monkey in monkeys:
         try:
             while True:
-                monkey.inspect()
+                monkey.inspect(relief=relief, max_item=lcm)
                 monkeys[monkey.throw()].add_item(monkey.thrown_item)
         except MonkeyHasNoItemException:
             continue
 
-def part1(filename: str, nb_rounds: int = 20) -> int:
+def compute_monkey_business_level(filename: str, nb_rounds: int = 20, relief: bool = True) -> int:
     monkeys = parse_config(filename)
-    for _ in range(20):
-        round(monkeys)
+    for _ in range(nb_rounds):
+        round(monkeys, relief=relief)
     return math.prod(sorted(map(lambda monkey: monkey.nb_times_inspection, monkeys))[-2:])
 
 if __name__ == '__main__':
     print("Puzzle input example")
-    print("Part 1:", part1("day11/puzzle_input_example.txt"))
+    filename = "day11/puzzle_input_example.txt"
+    print("Part 1:", compute_monkey_business_level(filename))
+    print("Part 2:", compute_monkey_business_level(filename, nb_rounds=10_000, relief=False))
     print("Puzzle input")
-    print("Part 2:", part1("day11/puzzle_input.txt"))
+    filename = "day11/puzzle_input.txt"
+    print("Part 1:", compute_monkey_business_level(filename))
+    print("Part 2:", compute_monkey_business_level(filename, nb_rounds=10_000, relief=False))
+    
