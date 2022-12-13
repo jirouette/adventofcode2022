@@ -2,6 +2,7 @@
 #coding: utf8
 
 from dataclasses import dataclass
+import math
 
 Position = int
 
@@ -56,8 +57,8 @@ def parse_map(filename: str) -> Map:
     data = open(filename).read().strip()
     return Map(data.replace("\n", ""), data.index("\n"), len(data.split("\n")))
 
-def get_fewest_steps(map: Map) -> int:
-    adjacents = [(map.get_starting_position(), 0)]
+def get_fewest_steps(map: Map, origin: Position) -> int:
+    adjacents = [(origin, 0)]
     reached_positions = list()
     while adjacents:
         position, score = adjacents.pop(0)
@@ -73,15 +74,20 @@ def get_fewest_steps(map: Map) -> int:
             map.get_right_position_of(position)
         ]
         adjacents += [(p, score+1) for p in adjacents_positions if p >= 0 and map.is_reachable(position, p)]
-    return 0
+    return math.inf
+
+def get_fewest_steps_from_any_lowest_position(map: Map) -> int:
+    return min([get_fewest_steps(map, i) for i in range(len(map.tiles)) if map.tiles[i] in "aS"])
 
 if __name__ == '__main__':
     print("Puzzle input example")
     filename = "day12/puzzle_input_example.txt"
     map = parse_map(filename)
-    print(get_fewest_steps(map))
+    print(get_fewest_steps(map, map.get_starting_position()))
+    print(get_fewest_steps_from_any_lowest_position(map))
 
     print("Puzzle input")
     filename = "day12/puzzle_input.txt"
     map = parse_map(filename)
-    print(get_fewest_steps(map))
+    print(get_fewest_steps(map, map.get_starting_position()))
+    print(get_fewest_steps_from_any_lowest_position(map))
