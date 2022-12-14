@@ -4,11 +4,13 @@
 import json
 from functools import cmp_to_key
 
-def parse_packets(filename: str) -> list:
+Packet = int|list["Packet"]
+
+def parse_packets(filename: str) -> list[Packet]:
     data = open(filename).read().strip()
     return [json.loads(l) for l in data.replace("\n\n", "\n").split("\n")]
 
-def check_pair(p1, p2) -> bool:
+def check_pair(p1: Packet, p2: Packet) -> None|bool:
     if not p1 and p2:
         return True
     if p1 and not p2:
@@ -32,16 +34,16 @@ def check_pair(p1, p2) -> bool:
         return result
     return check_pair(p1, p2)
 
-def count_right_orders(pairs: list) -> int:
+def count_right_orders(pairs: list[tuple[Packet, Packet]]) -> int:
     return sum([i+1 for i in range(len(pairs)) if check_pair(*pairs[i]) != False])
 
-def sort_packets(packets: list) -> list:
+def sort_packets(packets: list[Packet]) -> list[Packet]:
     return sorted(packets, key=cmp_to_key(lambda p1, p2: {True: -1, None: 0, False: 1}[check_pair(p1, p2)]))
 
-def decoder_key(packets: list, p1, p2) -> int:
+def decoder_key(packets: list[Packet], p1: Packet, p2: Packet) -> int:
     return (packets.index(p1)+1) * (packets.index(p2)+1)
 
-DIVIDER_PACKET = [[[2]], [[6]]]
+DIVIDER_PACKET: list[Packet] = [[[2]], [[6]]]
 
 if __name__ == '__main__':
     print("Puzzle input example")
